@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/bash
 
 before_reboot(){
     # get new program list
@@ -10,18 +10,18 @@ before_reboot(){
 
     # install needed packages
     sudo tasksel install openssh-server dns-server samba-server lamp-server;
-    sudo apt-get install -y avahi-daemon libnss-mdns isc-dhcp-daemon iptables dnsmasq vsftpd;
+    sudo apt-get install -y avahi-daemon libnss-mdns isc-dhcp-server iptables dnsmasq vsftpd;
 }
 
 after_1_reboot(){
     echo "\033[32;31##############################################"
     echo "                 REBOOTED"
-    echo "##############################################\033[0;0m"
+    echo "###############################################\033[0;0m"
     sleep 1;
     # network config
     sudo echo "
 auto enp0s8
-iface enp0s8 static
+iface enp0s8 inet static
 address 192.168.5.1
 netmask 255.255.255.0
 gateway 192.168.5.1
@@ -44,8 +44,9 @@ subnet 192.168.5.0 netmask 255.255.255.0 {
 range 192.168.5.10 192.168.5.20;
 }" >> /etc/dhcp/dhcpd.conf;
     sudo /etc/init.d/isc-dhcp-server stop;
+    sleep 1;
     sudo /etc/init.d/isc-dhcp-server start;
-
+    sleep 1;
     # routings
     sudo echo "
 #! /bin/bash
@@ -62,21 +63,19 @@ after_2_reboot(){
 
 }
 
+# checking if rebooted
 if [ -f /var/run/continue-setup-after-reboot ]; then
     after_1_reboot
+    after_2_reboot
     sudo rm -f /var/run/continue-setup-after-reboot
 else
     before_reboot
     sudo touch /var/run/continue-setup-after-reboot
     echo 'rebooting in...'
-    echo "\033[32;31m1";
-    sleep 1;
-    echo "2";
-    sleep 1;
-    echo "3";
-    sleep 1;
-    echo "################# REBOOT NOW #################\033[0;0m";
-    sleep 1;
+    echo "\033[32;31m1"; sleep 1;
+    echo "2"; sleep 1;
+    echo "3"; sleep 1;
+    echo "################# REBOOT NOW #################\033[0;0m"; sleep 1;
     # reboot
     sudo reboot
 fi
